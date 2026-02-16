@@ -1,14 +1,3 @@
--- Builc A PC Seed Data
--- Passwords are bcrypt hashes generated with cost factor 10
--- admin123    → $2b$10$X7UrE2B6LHQZ5YBqKxVvquJNe9m/5wRFzXQ7FKr6kUxS8xtJ1Hqxm
--- password123 → $2b$10$K7UrE2B6LHQZ5YBqKxVvquJNe9m/5wRFzXQ7FKr6kUxS8xtJ1Hqxm
--- NOTE: These placeholder hashes will be replaced on first server start
--- via the seed script, or you can run: node -e "..." to generate real ones
-
--- For simplicity in a school project, we'll use a helper script to hash.
--- The INSERT statements below use placeholder text; the actual seed.js
--- script will hash them properly. But we provide valid SQL here too.
-
 -- ─── Users ────────────────────────────────────────────────────────
 
 INSERT INTO users (id, email, password_hash, display_name, avatar_url, bio, role, is_banned) VALUES

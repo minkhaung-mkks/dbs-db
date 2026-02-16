@@ -1,5 +1,3 @@
--- BuildBoard Database Schema
--- Drop and recreate everything
 
 DROP SCHEMA public CASCADE;
 CREATE SCHEMA public;
