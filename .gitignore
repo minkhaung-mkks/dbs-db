@@ -49,3 +49,7 @@ node-debug.log
 *.pem
 *.key
 *.crt
+
+
+# dev tools
+**/*repomix*
