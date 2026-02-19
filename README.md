@@ -26,7 +26,8 @@ A RESTful backend API for **Build Me a PC**, a platform connecting PC enthusiast
 - [Compatibility Engine](#compatibility-engine)
 - [Database Schema](#database-schema)
 - [Project Structure](#project-structure)
-
+- [Error Handling](#error-handling)
+- [Contributors](#contributors)
 ---
 
 ## Overview
@@ -399,3 +400,20 @@ The global error handler catches all errors and returns consistent JSON response
 | Duplicate resource       | 409    | `{ error: "Resource already exists" }`|
 | FK constraint violation  | 400    | `{ error: "Referenced resource not found" }`|
 | Internal error           | 500    | `{ error: "Internal server error" }`  |
+
+---
+
+## Contributors
+
+This is a university project for **CSX3006 Database Systems** course, developed by a team of 3 students:
+
+### Team Members
+
+| Name                   | Student ID | GitHub Username (Profile)                   |
+|------------------------|------------|---------------------------------------------|
+| Min Khaung Kyaw Swar   | 6712164    | [sasta-kro](github.com/sasta-kro)           |
+| Sai Aike Shwe Tun Aung | 6712122    | [minkhaung-mkks](github.com/minkhaung-mkks) |
+| Ekaterina Kazakova     | 6720065    | [Kari-Nami](github.com/Kari-Nami)           |
+
+---
+
