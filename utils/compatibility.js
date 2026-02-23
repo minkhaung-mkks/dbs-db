@@ -7,7 +7,6 @@ export function evaluateRules(rules, selectedParts) {
 
     const config = typeof rule.rule_config === 'string' ? JSON.parse(rule.rule_config) : rule.rule_config;
 
-    
     if (config.condition) {
       const condPart = selectedParts[config.condition.part];
       if (!condPart) continue;

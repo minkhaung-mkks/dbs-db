@@ -78,7 +78,7 @@ router.put('/:id/review', authenticate, requireRole('admin'), async (req, res, n
 
     
     const { rows } = await client.query(
-      `UPDATE builder_applications SET status=$1, admin_notes=$2, reviewed_by=$3, reviewed_at=now()
+      `UPDATE builder_applications SET status=$1, admin_notes=$2, reviewed_by=$3
        WHERE id = $4 RETURNING *`,
       [status, admin_notes || null, req.user.id, req.params.id]
     );

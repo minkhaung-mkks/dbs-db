@@ -5,6 +5,17 @@ import { evaluateRules } from '../utils/compatibility.js';
 
 const router = Router();
 
+const REQUIRED_PARTS = ['cpu', 'motherboard', 'ram', 'psu', 'case'];
+
+function validateMinimumParts(buildParts) {
+  if (!buildParts || Object.keys(buildParts).length === 0) {
+    return { valid: false, missing: REQUIRED_PARTS };
+  }
+  const present = Object.keys(buildParts).filter(k => buildParts[k]);
+  const missing = REQUIRED_PARTS.filter(c => !present.includes(c));
+  return { valid: missing.length === 0, missing };
+}
+
 
 router.get('/', async (req, res, next) => {
   try {
@@ -100,7 +111,14 @@ router.post('/', authenticate, async (req, res, next) => {
 
     const { title, description, purpose, total_price, status, build_type, availability_status, image_urls, specs_summary, parts: buildParts } = req.body;
 
-    
+    const validation = validateMinimumParts(buildParts);
+    if (!validation.valid) {
+      return res.status(400).json({ 
+        error: 'Build must include all required parts', 
+        missing_parts: validation.missing 
+      });
+    }
+
     if (buildParts && Object.keys(buildParts).length > 0) {
       const issues = await runCompatibilityCheck(client, buildParts);
       const errors = issues.filter(i => i.severity === 'error');
@@ -167,7 +185,15 @@ router.put('/:id', authenticate, async (req, res, next) => {
 
     const { title, description, purpose, total_price, status, build_type, availability_status, image_urls, specs_summary, parts: buildParts } = req.body;
 
-    
+    const validation = validateMinimumParts(buildParts);
+    if (!validation.valid) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ 
+        error: 'Build must include all required parts', 
+        missing_parts: validation.missing 
+      });
+    }
+
     if (buildParts && Object.keys(buildParts).length > 0) {
       const issues = await runCompatibilityCheck(client, buildParts);
       const errors = issues.filter(i => i.severity === 'error');
@@ -302,7 +328,7 @@ router.post('/:id/ratings', authenticate, async (req, res, next) => {
 router.get('/:id/comments', async (req, res, next) => {
   try {
     const { rows } = await pool.query(
-      `SELECT c.*, u.display_name as user_display_name
+      `SELECT c.*, u.display_name as creator_display_name
        FROM comments c JOIN users u ON c.user_id = u.id
        WHERE c.build_id = $1 ORDER BY c.created_at ASC`,
       [req.params.id]
