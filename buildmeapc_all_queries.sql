@@ -490,24 +490,21 @@ VALUES ($1, $2, $3, $4)
 -- LIKES QUERIES
 -- ------------------------------------------------------------------------------------------
 
--- Query 31: Get likes for a build
+-- Query 30: Get likes for a build
 -- Purpose: Returns all likes (used for count)
 SELECT * FROM likes WHERE build_id = $1;
 
--- Query 32: Check if user liked a build
+-- Query 31: Check if user liked a build
 -- Purpose: Returns whether current user has liked this build
 SELECT id FROM likes WHERE user_id = $1 AND build_id = $2;
 
--- Query 33: Toggle like - check existing
--- Purpose: Determines if user already liked to toggle state
-SELECT id FROM likes WHERE user_id = $1 AND build_id = $2;
 
--- Query 34: Like a build
+-- Query 32: Like a build
 -- Purpose: Insert like and increment build's like_count
 INSERT INTO likes (user_id, build_id) VALUES ($1, $2);
 UPDATE builds SET like_count = like_count + 1 WHERE id = $1;
 
--- Query 35: Unlike a build
+-- Query 33: Unlike a build
 -- Purpose: Delete like and decrement build's like_count (used by builds.js route)
 DELETE FROM likes WHERE id = $1;
 UPDATE builds SET like_count = GREATEST(0, like_count - 1) WHERE id = $1;
@@ -517,7 +514,7 @@ UPDATE builds SET like_count = GREATEST(0, like_count - 1) WHERE id = $1;
 -- BUILD REQUESTS QUERIES
 -- ------------------------------------------------------------------------------------------
 
--- Query 37: Browse build requests (Request Board)
+-- Query 34: Browse build requests (Request Board)
 -- Purpose: Browse all build requests on the request board with optional status filter
 SELECT 
   br.id,
@@ -540,7 +537,7 @@ LEFT JOIN users pb ON br.preferred_builder_id = pb.id
 WHERE br.status = $1 
 ORDER BY br.created_at DESC;
 
--- Query 38: Check build's active request
+-- Query 35: Check build's active request
 -- Purpose: Check if a build already has an open or claimed request (prevent duplicates)
 SELECT 
   br.id,
@@ -551,8 +548,8 @@ WHERE br.build_id = $1
   AND br.status IN ('open', 'claimed')
 LIMIT 1;
 
--- Query 39: Get single request details
--- Purpose: Returns full build request info for request detail page 
+-- Query 36: Get single request details
+-- Purpose: Returns full build request info for request detail page
 SELECT br.*, u.display_name as user_display_name, u.email as user_email,
        b.title as build_title, b.total_price as build_total_price, b.description as build_description,
        pb.display_name as preferred_builder_name
@@ -562,13 +559,13 @@ JOIN builds b ON br.build_id = b.id
 LEFT JOIN users pb ON br.preferred_builder_id = pb.id
 WHERE br.id = $1;
 
--- Query 40: Create build request
+-- Query 37: Create build request
 -- Purpose: Posts a new request to the request board
 INSERT INTO build_requests (build_id, user_id, budget, purpose, notes, preferred_builder_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
--- Query 41: Update build request
+-- Query 38: Update build request
 -- Purpose: Edit request details or change status (complete/cancel)
 SELECT * FROM build_requests WHERE id = $1;
 UPDATE build_requests SET budget=$1, purpose=$2, notes=$3, status=$4, preferred_builder_id=$5
@@ -579,7 +576,7 @@ WHERE id = $6 RETURNING *;
 -- BUILDER OFFERS QUERIES
 -- ------------------------------------------------------------------------------------------
 
--- Query 42: Get offers for a request (Request Owner View)
+-- Query 39: Get offers for a request (Request Owner View)
 -- Purpose: Show request owner all offers submitted to their build request to either accept or reject them.
 SELECT 
   bo.id,
@@ -601,7 +598,7 @@ LEFT JOIN builder_profiles bp ON bp.user_id = bo.builder_id
 WHERE bo.request_id = $1
 ORDER BY bo.created_at DESC;
 
--- Query 43: Get builder's own offers (Builder Dashboard)
+-- Query 40: Get builder's own offers (Builder Dashboard)
 -- Purpose: Show builder all offers they have submitted across all requests
 SELECT 
   bo.id,
@@ -619,13 +616,13 @@ JOIN builds b ON br.build_id = b.id
 WHERE bo.builder_id = $1
 ORDER BY bo.created_at DESC;
 
--- Query 44: Create builder offer
+-- Query 41: Create builder offer
 -- Purpose: Builder submits an offer on a request
 INSERT INTO builder_offers (request_id, builder_id, fee, message, suggested_build_id, contact_info)
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
--- Query 45: Accept offer (transaction)
+-- Query 42: Accept offer (transaction)
 -- Purpose: Requester accepts an offer, it then cascade to rejects all other offers, marks request as claimed
 SELECT * FROM builder_offers WHERE id = $1;
 SELECT * FROM build_requests WHERE id = $1;
@@ -638,41 +635,41 @@ UPDATE build_requests SET status = 'claimed' WHERE id = $1;
 -- USERS QUERIES
 -- ------------------------------------------------------------------------------------------
 
--- Query 46: Get all users (admin only)
+-- Query 43: Get all users (admin only)
 -- Purpose: Admin user management list
 SELECT id, email, display_name, avatar_url, bio, role, is_banned, created_at 
 FROM users 
 ORDER BY created_at DESC;
 
--- Query 47: Get builders list
+-- Query 44: Get builders list
 -- Purpose: Returns all users with builder or admin role for dropdowns
 SELECT id, display_name, avatar_url, role FROM users WHERE role IN ('builder', 'admin') ORDER BY display_name;
 
--- Query 48: Get user by ID (public profile)
+-- Query 45: Get user by ID (public profile)
 -- Purpose: Public profile view
 SELECT id, email, display_name, avatar_url, bio, role, is_banned, created_at FROM users WHERE id = $1;
 
--- Query 49: Update user profile
+-- Query 46: Update user profile
 -- Purpose: User edits their own profile
 UPDATE users SET display_name = COALESCE($1, display_name), avatar_url = $2, bio = $3
 WHERE id = $4
 RETURNING id, email, display_name, avatar_url, bio, role, is_banned, created_at;
 
--- Query 50: Ban/unban user (admin only)
+-- Query 47: Ban/unban user (admin only)
 -- Purpose: Admin can ban problematic users
 UPDATE users SET is_banned = $1 WHERE id = $2
 RETURNING id, email, display_name, role, is_banned;
 
--- Query 51: Change user role (admin only)
+-- Query 48: Change user role (admin only)
 -- Purpose: Admin can promote/demote users
 UPDATE users SET role = $1 WHERE id = $2
 RETURNING id, email, display_name, role, is_banned;
 
--- Query 52: Get builder profile
+-- Query 49: Get builder profile
 -- Purpose: Returns extended profile for builders
 SELECT * FROM builder_profiles WHERE user_id = $1;
 
--- Query 53: Update builder profile
+-- Query 50: Update builder profile
 -- Purpose: Builder edits their business profile
 UPDATE builder_profiles SET business_name=$1, registration_number=$2, address=$3, website=$4, portfolio_url=$5, years_of_experience=$6, specialization=$7
 WHERE user_id = $8 RETURNING *;
@@ -682,7 +679,7 @@ WHERE user_id = $8 RETURNING *;
 -- SHOWCASE INQUIRIES QUERIES
 -- ------------------------------------------------------------------------------------------
 
--- Query 54: Get builder's inquiries (Builder Dashboard)
+-- Query 51: Get builder's inquiries (Builder Dashboard)
 -- Purpose: Builders see inquiries on their showcase builds
 SELECT si.*, u.display_name as user_display_name, b.title as build_title
 FROM showcase_inquiries si
@@ -691,7 +688,7 @@ JOIN builds b ON si.build_id = b.id
 WHERE si.builder_id = $1
 ORDER BY si.created_at DESC;
 
--- Query 55: Create showcase inquiry
+-- Query 52: Create showcase inquiry
 -- Purpose: User sends inquiry about a showcase build
 INSERT INTO showcase_inquiries (user_id, build_id, builder_id, message)
 VALUES ($1, $2, $3, $4)
@@ -702,7 +699,7 @@ RETURNING *;
 -- BUILDER APPLICATIONS QUERIES
 -- ------------------------------------------------------------------------------------------
 
--- Query 56: Get applications by status (admin only)
+-- Query 53: Get applications by status (admin only)
 -- Purpose: Admin reviews builder applications filtered by status
 SELECT ba.*, u.display_name as user_display_name, u.email as user_email
 FROM builder_applications ba
@@ -710,7 +707,7 @@ JOIN users u ON ba.user_id = u.id
 WHERE ba.status = $1  -- 'pending', 'approved', or 'rejected'
 ORDER BY ba.created_at DESC;
 
--- Query 57: Get my applications
+-- Query 54: Get my applications
 -- Purpose: User checks status of their builder application
 SELECT ba.*, u.display_name as user_display_name, u.email as user_email
 FROM builder_applications ba
@@ -718,13 +715,13 @@ JOIN users u ON ba.user_id = u.id
 WHERE ba.user_id = $1
 ORDER BY ba.created_at DESC;
 
--- Query 58: Submit builder application
+-- Query 55: Submit builder application
 -- Purpose: User applies to become a verified builder
 INSERT INTO builder_applications (user_id, business_name, registration_number, address, website, portfolio_url, years_of_experience, specialization, application_type)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *;
 
--- Query 59: Approve application (admin only) - transaction
+-- Query 56: Approve application (admin only) - transaction
 -- Purpose: Admin approves application, creates builder profile, updates user role
 -- Step 1: Update application status
 UPDATE builder_applications SET status=$1, admin_notes=$2, reviewed_by=$3
@@ -736,7 +733,7 @@ INSERT INTO builder_profiles (user_id, business_name, registration_number, addre
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 ON CONFLICT (user_id) DO NOTHING;
 
--- Query 60: Reject application (admin only)
+-- Query 57: Reject application (admin only)
 -- Purpose: Admin rejects a builder application
 UPDATE builder_applications SET status='rejected', admin_notes=$1, reviewed_by=$2
 WHERE id = $3 RETURNING *;
@@ -746,32 +743,32 @@ WHERE id = $3 RETURNING *;
 -- COMPATIBILITY QUERIES
 -- ------------------------------------------------------------------------------------------
 
--- Query 61: Get parts for compatibility check
+-- Query 58: Get parts for compatibility check
 -- Purpose: Retrieves parts selected by user with category info for rule evaluation
 SELECT p.*, LOWER(REPLACE(pc.category_name, ' ', '-')) as category_slug
 FROM parts p JOIN part_categories pc ON p.category_id = pc.id
 WHERE p.id = ANY($1);
 
--- Query 62: Get active compatibility rules
+-- Query 59: Get active compatibility rules
 -- Purpose: Returns all active rules for evaluation during build creation/edit
 SELECT * FROM compatibility_rules WHERE is_active = true ORDER BY rule_number;
 
--- Query 63: Get all compatibility rules (admin only)
+-- Query 60: Get all compatibility rules (admin only)
 -- Purpose: Admin can view all rules including inactive
 SELECT * FROM compatibility_rules ORDER BY rule_number;
 
--- Query 64: Update compatibility rule (admin only)
+-- Query 61: Update compatibility rule (admin only)
 -- Purpose: Admin can toggle active, change severity, or update message
 UPDATE compatibility_rules SET is_active = $1, severity = $2, rule_config = $3, message_template = $4
 WHERE id = $5 RETURNING *;
 
--- Query 65: Create compatibility rule (admin only)
+-- Query 62: Create compatibility rule (admin only)
 -- Purpose: Admin can create new compatibility rules
 INSERT INTO compatibility_rules (rule_number, name, description, severity, rule_config, message_template, is_active)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
--- Query 66: Delete compatibility rule (admin only)
+-- Query 63: Delete compatibility rule (admin only)
 -- Purpose: Admin can delete compatibility rules
 DELETE FROM compatibility_rules WHERE id = $1;
 
@@ -780,7 +777,7 @@ DELETE FROM compatibility_rules WHERE id = $1;
 -- STATS QUERY
 -- ------------------------------------------------------------------------------------------
 
--- Query 67: Get platform statistics (Homepage)
+-- Query 64: Get platform statistics (Homepage)
 -- Purpose: Returns counts for homepage stats display
 SELECT
   (SELECT COUNT(*) FROM builds WHERE status = 'published')::int as builds,
