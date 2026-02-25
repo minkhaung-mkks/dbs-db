@@ -10,6 +10,7 @@ router.get('/', async (req, res, next) => {
     const { status, user_id, build_id } = req.query;
     let query = `SELECT br.*, u.display_name as user_display_name,
                         b.title as build_title, b.total_price as build_total_price,
+                        b.image_urls as build_image_urls,
                         pb.display_name as preferred_builder_name
                  FROM build_requests br
                  JOIN users u ON br.user_id = u.id
@@ -33,7 +34,13 @@ router.get('/', async (req, res, next) => {
 
     query += ' ORDER BY br.created_at DESC';
     const { rows } = await pool.query(query, params);
-    res.json(rows);
+    
+    const result = rows.map(row => ({
+      ...row,
+      build_image_urls: row.build_image_urls || [],
+    }));
+    
+    res.json(result);
   } catch (err) {
     next(err);
   }
@@ -45,6 +52,7 @@ router.get('/:id', async (req, res, next) => {
     const { rows } = await pool.query(
       `SELECT br.*, u.display_name as user_display_name, u.email as user_email,
               b.title as build_title, b.total_price as build_total_price, b.description as build_description,
+              b.image_urls as build_image_urls,
               pb.display_name as preferred_builder_name
        FROM build_requests br
        JOIN users u ON br.user_id = u.id

@@ -52,4 +52,37 @@ router.post('/', authenticate, async (req, res, next) => {
   }
 });
 
+
+router.put('/:id', authenticate, async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    if (!['accepted', 'declined'].includes(status)) {
+      return res.status(400).json({ error: 'Status must be accepted or declined' });
+    }
+
+    const checkResult = await pool.query(
+      'SELECT builder_id FROM showcase_inquiries WHERE id = $1',
+      [id]
+    );
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Inquiry not found' });
+    }
+
+    if (checkResult.rows[0].builder_id !== req.user.id) {
+      return res.status(403).json({ error: 'Only the builder can update this inquiry' });
+    }
+
+    const { rows } = await pool.query(
+      `UPDATE showcase_inquiries SET status = $1 WHERE id = $2 RETURNING *`,
+      [status, id]
+    );
+    res.json(rows[0]);
+  } catch (err) {
+    next(err);
+  }
+});
+
 export default router;

@@ -15,7 +15,7 @@ CREATE TYPE request_status AS ENUM ('open', 'claimed', 'in_progress', 'completed
 CREATE TYPE offer_status AS ENUM ('pending', 'accepted', 'rejected');
 CREATE TYPE application_status AS ENUM ('pending', 'approved', 'rejected');
 CREATE TYPE application_type AS ENUM ('business', 'individual');
-CREATE TYPE inquiry_status AS ENUM ('pending', 'responded', 'closed');
+CREATE TYPE inquiry_status AS ENUM ('pending', 'accepted', 'declined');
 
 -- ─── Tables ────────────────────────────────────────────────────────
 
